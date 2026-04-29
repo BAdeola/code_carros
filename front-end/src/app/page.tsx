@@ -14,7 +14,7 @@ export default function LandingPage() {
       <nav className="flex justify-between items-center px-6 md:px-10 py-4 sticky top-0 z-50 bg-[#F3F3F2]/80 backdrop-blur-sm">
         <Image src={logo} alt="Logo" width={60} height={60} className='opacity-80 md:w-17.5 md:h-17.5' />
         <div className="flex gap-4 md:gap-8 text-xs md:text-sm font-medium uppercase tracking-widest font-zetta">
-          <Link href="#sobre" className="hover:opacity-70 transition-colors">Sobre</Link>
+          <Link href="/catalogo" className="hover:opacity-70 transition-all">Catálogo</Link>
           <Link href="/login" className="border-b-2 border-black pb-1 hover:opacity-70 transition-all">Login</Link>
         </div>
       </nav>
