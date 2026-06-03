@@ -5,8 +5,8 @@ import logoC from '../../../assets/logo_c.png';
 // Tipagem das Props: O Sidebar precisa saber qual aba está ativa 
 // e precisa da função para mudar de aba quando o usuário clicar
 interface AdminSidebarProps {
-  activeView: 'automoveis' | 'concessionarias';
-  setActiveView: (view: 'automoveis' | 'concessionarias') => void;
+  activeView: 'automoveis' | 'concessionarias' | 'usuarios';
+  setActiveView: (view: 'automoveis' | 'concessionarias' | 'usuarios') => void;
 }
 
 export function AdminSidebar({ activeView, setActiveView }: AdminSidebarProps) {
@@ -30,7 +30,7 @@ export function AdminSidebar({ activeView, setActiveView }: AdminSidebarProps) {
             activeView === 'automoveis' ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50'
           }`}
         >
-          🚗 Automóveis
+          Automóveis
         </button>
         <button 
           onClick={() => setActiveView('concessionarias')}
@@ -38,15 +38,23 @@ export function AdminSidebar({ activeView, setActiveView }: AdminSidebarProps) {
             activeView === 'concessionarias' ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50'
           }`}
         >
-          🏢 Concessionárias
+          Concessionárias
+        </button>
+        
+        <button
+          onClick={() => setActiveView('usuarios')}
+          className={`w-full flex items-center gap-4 px-6 py-4 font-exa text-xs font-bold uppercase tracking-widest transition-all rounded-xl
+            ${activeView === 'usuarios' ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}
+        >
+          Usuários
         </button>
       </nav>
 
       {/* User Info & Logout */}
       <div className="p-6 border-t border-gray-100">
         <div className="flex justify-between items-center">
-          <span className="font-exa font-bold text-xs text-gray-800">Gerente Geral</span>
-          <Link href="/" className="font-exa font-bold text-[10px] text-red-500 hover:underline uppercase">Sair</Link>
+          <span className="font-exa font-bold text-xs text-gray-800">Administrador Geral</span>
+          <Link href="/" className="font-exa font-bold text-[12px] text-red-500 hover:underline uppercase">Sair</Link>
         </div>
       </div>
     </aside>

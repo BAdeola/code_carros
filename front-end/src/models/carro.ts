@@ -9,4 +9,5 @@ export interface Carro {
   quilometragem: number;
   cor: string;
   combustivel: string;
+  site?: string;
 }

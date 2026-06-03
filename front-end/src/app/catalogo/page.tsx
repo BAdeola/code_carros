@@ -217,14 +217,26 @@ export default function AutomoveisPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* 🔹 Iteramos sobre a variável 'carrosFiltrados' */}
               {carrosFiltrados.map((carro) => (
-                <div key={carro.id} className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group cursor-pointer border border-transparent hover:border-blue-100 flex flex-col">
+                <div 
+                  key={carro.id} 
+                  // 🔹 MÁGICA DO CLIQUE: Abre o site em uma nova aba se ele existir!
+                  onClick={() => {
+                    if (carro.site) {
+                      window.open(carro.site, '_blank');
+                    }
+                  }}
+                  // 🔹 UX SÊNIOR: Só mostra a mãozinha e a borda azul se for clicável
+                  className={`bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 group flex flex-col border
+                    ${carro.site ? 'cursor-pointer border-transparent hover:border-blue-100' : 'cursor-default border-transparent'}
+                  `}
+                >
                   
                   {/* Imagem do Carro */}
                   <div className="relative w-full h-48 bg-gray-100 overflow-hidden">
                     {carro.foto_url ? (
                       <Image 
                         src={carro.foto_url} alt={carro.modelo} fill unoptimized
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
+                        className={`object-cover transition-transform duration-500 ${carro.site ? 'group-hover:scale-105' : ''}`}
                       />
                     ) : (
                       <div className="absolute inset-0 flex items-center justify-center text-gray-300 font-exa text-[10px]">SEM FOTO</div>
@@ -241,14 +253,25 @@ export default function AutomoveisPage() {
                     <div className="flex gap-2 mb-4">
                         <span className="font-zetta text-[9px] text-gray-400 uppercase">{carro.ano}</span>
                         <span className="font-zetta text-[9px] text-gray-400 uppercase">•</span>
-                        <span className="font-zetta text-[9px] text-gray-400 uppercase">{carro.quilometragem.toLocaleString()} KM</span>
+                        <span className="font-zetta text-[9px] text-gray-400 uppercase">{carro.quilometragem.toLocaleString('pt-BR')} KM</span>
                     </div>
                     
-                    <div className="mt-auto">
-                      <span className="text-xs font-zetta text-gray-500 block mb-1">A partir de</span>
-                      <span className="font-exa font-semibold text-2xl text-blue-600">
-                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(carro.preco)}
-                      </span>
+                    <div className="mt-auto flex justify-between items-end">
+                      <div>
+                        <span className="text-xs font-zetta text-gray-500 block mb-1">A partir de</span>
+                        <span className="font-exa font-semibold text-2xl text-blue-600">
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(carro.preco)}
+                        </span>
+                      </div>
+                      
+                      {/* 🔹 INDICADOR VISUAL (Opcional, mas muito bom para UX) */}
+                      {carro.site && (
+                         <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 transform -rotate-45" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                             <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                           </svg>
+                         </div>
+                      )}
                     </div>
                   </div>
 
