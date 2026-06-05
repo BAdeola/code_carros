@@ -4,21 +4,15 @@ import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 
-// 1. Instanciamos o cliente Admin com a Service Role Key (exclusivo para bypassar RLS e gerenciar Auth)
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-/**
- * 🚀 NOVA FUNÇÃO: Realiza o Login diretamente no Servidor
- * Garante que os Cookies HTTP-Only sejam gravados instantaneamente antes de responder ao cliente.
- */
 export async function loginAbsolutoAction(email: string, senha: string) {
   try {
     const cookieStore = await cookies();
 
-    // Cria o cliente Supabase do servidor usando a nova especificação getAll/setAll recomendada para Next.js 15
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -38,7 +32,6 @@ export async function loginAbsolutoAction(email: string, senha: string) {
       }
     );
 
-    // Executa a autenticação no back-end
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password: senha,
@@ -46,7 +39,6 @@ export async function loginAbsolutoAction(email: string, senha: string) {
 
     if (error) throw new Error(error.message);
 
-    // Busca o cargo do perfil recém-logado para orientar o roteamento no front-end
     const { data: perfil } = await supabase
       .from('perfis')
       .select('cargo')
@@ -60,9 +52,6 @@ export async function loginAbsolutoAction(email: string, senha: string) {
   }
 }
 
-/**
- * 🔐 Cadastra um novo Gerente via Auth Admin (Não desloga o administrador)
- */
 export async function cadastrarGerenteAction(dados: {
   nome: string;
   email: string;
@@ -98,16 +87,13 @@ export async function cadastrarGerenteAction(dados: {
   }
 }
 
-/**
- * ✏️ Atualiza os dados cadastrais e/ou senha forçada de um Gerente existente
- */
 export async function atualizarGerenteAction(
   uid: string,
   dados: { nome: string; email: string; concessionariaId: string; senha?: string }
 ) {
   try {
     const authUpdate: any = { email: dados.email, user_metadata: { nome: dados.nome } };
-    
+
     if (dados.senha && dados.senha.trim() !== '') {
       authUpdate.password = dados.senha;
     }
@@ -132,9 +118,6 @@ export async function atualizarGerenteAction(
   }
 }
 
-/**
- * 🗑️ Remove permanentemente um usuário do banco de dados (Auth e Cascade Perfil)
- */
 export async function deletarGerenteAction(uid: string) {
   try {
     const { error } = await supabaseAdmin.auth.admin.deleteUser(uid);
@@ -145,14 +128,11 @@ export async function deletarGerenteAction(uid: string) {
   }
 }
 
-/**
- * 🛑 Destrói de forma atômica e limpa os cookies de sessão e revoga o token JWT
- */
 export async function logoutAbsolutoAction() {
   try {
     const cookieStore = await cookies();
 
-    const supabaseCookies = createServerClient(
+    const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
@@ -171,23 +151,21 @@ export async function logoutAbsolutoAction() {
       }
     );
 
-    // Informa o servidor do Supabase para invalidar a sessão
-    await supabaseCookies.auth.signOut();
+    await supabase.auth.signOut();
 
-    // Expira manualmente qualquer cookie remanescente do Supabase no navegador
+    // Apaga todos os cookies do Supabase de forma explícita
     const todosCookies = cookieStore.getAll();
-    todosCookies.forEach((cookie: any) => {
-      if (cookie.name.includes('sb-') || cookie.name.includes('auth')) {
-        try {
-          cookieStore.set({
-            name: cookie.name,
-            value: '',
-            maxAge: -1,
-            path: '/',
-          });
-        } catch (e) {}
+    for (const cookie of todosCookies) {
+      if (cookie.name.startsWith('sb-')) {
+        cookieStore.set({
+          name: cookie.name,
+          value: '',
+          maxAge: 0,
+          path: '/',
+          expires: new Date(0),
+        });
       }
-    });
+    }
 
     return { success: true };
   } catch (error) {

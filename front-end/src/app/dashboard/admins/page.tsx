@@ -10,10 +10,8 @@ import { ConfirmModal } from '../../../components/shared/ConfirmModal';
 import { useAdminData } from '../../../hooks/useAdminData';
 import { UserModal } from '@/src/components/shared/UserModal';
 import { deletarGerenteAction, logoutAbsolutoAction } from '../../../actions/usuarios';
-import { useRouter } from 'next/navigation';
 
 export default function DashboardGerente() {
-  const router = useRouter();
   const [activeView, setActiveView] = useState<'automoveis' | 'concessionarias' | 'usuarios'>('automoveis');
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
 
@@ -51,7 +49,8 @@ export default function DashboardGerente() {
       confirmText: 'Sim, Sair',
       onConfirm: async () => {
         await logoutAbsolutoAction();
-        router.refresh(); // middleware detecta sessão nula e redireciona pro /login
+        // Hard redirect — garante que nenhum cache ou cookie antigo sobrevive
+        window.location.href = '/login';
       }
     });
   };

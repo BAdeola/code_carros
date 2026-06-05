@@ -7,13 +7,11 @@ import { VehicleModal } from '../../../components/shared/VehicleModal';
 import { useGerenteData } from '../../../hooks/useGerenteData'; 
 import { supabase } from '../../../lib/supabase';
 import { ConfirmModal } from '../../../components/shared/ConfirmModal';
-import { useRouter } from 'next/navigation';
 
 import logoC from '../../../../assets/logo_c.png'; 
 import { logoutAbsolutoAction } from '../../../actions/usuarios';
 
 export default function DashboardCliente() {
-  const router = useRouter();
   const { concessionaria, carros, gerente, loading, refetch } = useGerenteData();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,7 +30,8 @@ export default function DashboardCliente() {
       confirmText: 'Sim, Sair',
       onConfirm: async () => {
         await logoutAbsolutoAction();
-        router.refresh(); // middleware detecta sessão nula e redireciona pro /login
+        // Hard redirect — garante que nenhum cache ou cookie antigo sobrevive
+        window.location.href = '/login';
       }
     });
   };
