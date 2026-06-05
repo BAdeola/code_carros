@@ -9,7 +9,7 @@ import { supabase } from '../../../lib/supabase';
 import { ConfirmModal } from '../../../components/shared/ConfirmModal';
 
 import logoC from '../../../assets/logo_c.png'; 
-import { logoutAbsolutoAction } from '@/src/actions/usuarios';
+import { logoutAbsolutoAction } from '../../../actions/usuarios';
 
 export default function DashboardCliente() {
   // 🔹 Puxamos o 'gerente' de dentro do Hook agora
