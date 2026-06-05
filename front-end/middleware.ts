@@ -1,92 +1,85 @@
 import { NextResponse, type NextRequest } from 'next/server'
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { createServerClient } from '@supabase/ssr'
 
 export async function middleware(request: NextRequest) {
-    let response = NextResponse.next({
-        request: {
-            headers: request.headers,
+  // 1. Cria a resposta inicial que pode ser modificada
+  let supabaseResponse = NextResponse.next({
+    request,
+  })
+
+  // 2. Inicializa o Supabase com a nova estrutura recomendada
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
         },
-    })
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({
+            request,
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
 
-    const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        {
-            cookies: {
-                get(name: string) {
-                    return request.cookies.get(name)?.value
-                },
-                set(name: string, value: string, options: CookieOptions) {
-                    request.cookies.set({ name, value, ...options })
-                    response = NextResponse.next({
-                        request: { headers: request.headers },
-                    })
-                    response.cookies.set({ name, value, ...options })
-                },
-                remove(name: string, options: CookieOptions) {
-                    request.cookies.set({ name, value: '', ...options })
-                    response = NextResponse.next({
-                        request: { headers: request.headers },
-                    })
-                    response.cookies.set({ name, value: '', ...options })
-                },
-            },
-        }
-    )
+  // 3. Verifica ativamente o usuário e atualiza a sessão (IMPORTANTÍSSIMO)
+  const { data: { user } } = await supabase.auth.getUser()
 
-    const { data: { user } } = await supabase.auth.getUser()
-
-    // 🚨 NOVA REGRA DE SEGURANÇA INTELIGENTE E ANTI-LOOP
+  // 4. Lógica de Redirecionamento Baseada em Cargos (Role-Based)
   if (user) {
-    // 1. Buscamos o cargo na tabela perfis
+    // Busca o cargo do usuário
     const { data: perfil } = await supabase
       .from('perfis')
       .select('cargo')
       .eq('id', user.id)
       .single()
 
-    const cargo = perfil?.cargo // Pode ser 'admin', 'gerente', ou vir vazio (null)
+    const cargo = perfil?.cargo
 
-    // 2. Se tentar aceder ao /login já estando logado
+    // Se estiver na tela de login, manda pro dashboard certo
     if (request.nextUrl.pathname.startsWith('/login')) {
       if (cargo === 'admin') {
         return NextResponse.redirect(new URL('/dashboard/admins', request.url))
       } else if (cargo === 'gerente') {
         return NextResponse.redirect(new URL('/dashboard/gerentes', request.url))
       }
-      // 🔹 ANTI-LOOP: Se não tiver cargo, NÃO fazemos redirect! 
-      // Deixamos a pessoa ficar na página de login.
     }
 
-    // 3. Proteção Cruzada do Painel Admin
-    if (request.nextUrl.pathname.startsWith('/dashboard/admins')) {
-      if (cargo === 'gerente') {
-        return NextResponse.redirect(new URL('/dashboard/gerentes', request.url))
-      } else if (cargo !== 'admin') {
-        // Se não for admin nem gerente (conta defeituosa), expulsa para o login
-        return NextResponse.redirect(new URL('/login', request.url))
-      }
+    // Proteção Cruzada - Admin
+    if (request.nextUrl.pathname.startsWith('/dashboard/admins') && cargo !== 'admin') {
+      return NextResponse.redirect(new URL(cargo === 'gerente' ? '/dashboard/gerentes' : '/login', request.url))
     }
 
-    // 4. Proteção Cruzada do Painel Gerente
-    if (request.nextUrl.pathname.startsWith('/dashboard/gerentes')) {
-      if (cargo === 'admin') {
-        return NextResponse.redirect(new URL('/dashboard/admins', request.url))
-      } else if (cargo !== 'gerente') {
-        return NextResponse.redirect(new URL('/login', request.url))
-      }
+    // Proteção Cruzada - Gerente
+    if (request.nextUrl.pathname.startsWith('/dashboard/gerentes') && cargo !== 'gerente') {
+      return NextResponse.redirect(new URL(cargo === 'admin' ? '/dashboard/admins' : '/login', request.url))
     }
 
   } else {
+    // Se não tem usuário e tenta entrar numa rota protegida, chuta pro login
     if (request.nextUrl.pathname.startsWith('/dashboard')) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
   }
 
-  return response
+  return supabaseResponse
 }
 
 export const config = {
   matcher: [
-    '/dashboard/:path*',
-    '/login',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
