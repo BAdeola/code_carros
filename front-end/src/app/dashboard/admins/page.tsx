@@ -9,7 +9,7 @@ import { ConcessionariaModal } from '../../../components/shared/ConcessionariaMo
 import { ConfirmModal } from '../../../components/shared/ConfirmModal'; 
 import { useAdminData } from '../../../hooks/useAdminData';
 import { UserModal } from '@/src/components/shared/UserModal';
-import { deletarGerenteAction } from '../../../actions/usuarios';
+import { deletarGerenteAction, logoutAbsolutoAction } from '../../../actions/usuarios';
 
 export default function DashboardGerente() {
   const [activeView, setActiveView] = useState<'automoveis' | 'concessionarias' | 'usuarios'>('automoveis');
@@ -45,11 +45,11 @@ export default function DashboardGerente() {
     setConfirmModal({
       isOpen: true,
       title: 'Sair do Sistema',
-      message: 'Deseja realmente encerrar sua sessão e voltar para a página inicial?',
+      message: 'Deseja realmente encerrar sua sessão e voltar para a página de login?',
       confirmText: 'Sim, Sair',
       onConfirm: async () => {
-        await supabase.auth.signOut();
-        window.location.href = '/';
+        await logoutAbsolutoAction();
+        window.location.replace('/login');
       }
     });
   };

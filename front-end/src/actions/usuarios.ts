@@ -1,8 +1,10 @@
 'use server';
 
 import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
+import { createServerClient } from '@supabase/ssr'; // 🔹 O IMPORT QUE FALTAVA AQUI!
 
-// 1. Instanciamos o cliente com a chave secreta de Admin
+// 1. Instanciamos o cliente com a chave secreta de Admin para orquestrações gerais
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -78,5 +80,48 @@ export async function deletarGerenteAction(uid: string) {
     return { success: true };
   } catch (error: any) {
     return { success: false, message: error.message };
+  }
+}
+
+export async function logoutAbsolutoAction() {
+  try {
+    const cookieStore = await cookies();
+    
+    const supabaseCookies = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) { return cookieStore.get(name)?.value },
+          set(name: string, value: string, options: any) { 
+            try { cookieStore.set({ name, value, ...options }) } catch (error) {} 
+          },
+          remove(name: string, options: any) { 
+            try { cookieStore.set({ name, value: '', ...options }) } catch (error) {} 
+          },
+        },
+      }
+    )
+
+    await supabaseCookies.auth.signOut()
+
+    const todosCookies = cookieStore.getAll()
+    todosCookies.forEach((cookie: any) => {
+      if (cookie.name.includes('sb-') || cookie.name.includes('auth')) {
+        try {
+          cookieStore.set({
+            name: cookie.name,
+            value: '',
+            maxAge: -1,
+            path: '/'
+          })
+        } catch (e) {}
+      }
+    })
+
+    return { success: true }
+  } catch (error) {
+    console.error("Erro ao destruir sessão:", error)
+    return { success: false }
   }
 }

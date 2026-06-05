@@ -34,21 +34,43 @@ export async function middleware(request: NextRequest) {
 
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
-        return NextResponse.redirect(new URL('/login', request.url))
-    }
+    if (user) {
+        const { data: perfil } = await supabase
+        .from('perfis')
+        .select('cargo')
+        .eq('id', user.id)
+        .single()
 
-    // Se a rota for o próprio /login, e o cara já estiver logado, joga pro dashboard!
-    if (request.nextUrl.pathname === '/login' && user) {
+        const cargo = perfil?.cargo
+
+        if (request.nextUrl.pathname === '/login') {
+        if (cargo === 'admin') {
+            return NextResponse.redirect(new URL('/dashboard/admins', request.url))
+        } else {
+            return NextResponse.redirect(new URL('/dashboard/gerentes', request.url)) 
+        }
+        }
+
+        if (request.nextUrl.pathname.startsWith('/dashboard/admins') && cargo !== 'admin') {
+        return NextResponse.redirect(new URL('/dashboard/gerentes', request.url))
+        }
+
+        if (request.nextUrl.pathname.startsWith('/dashboard/gerentes') && cargo !== 'gerente') {
         return NextResponse.redirect(new URL('/dashboard/admins', request.url))
+        }
+
+    } else {
+        if (request.nextUrl.pathname.startsWith('/dashboard')) {
+        return NextResponse.redirect(new URL('/login', request.url))
+        }
     }
 
     return response
 }
 
 export const config = {
-matcher: [
+  matcher: [
     '/dashboard/:path*',
     '/login',
-],
+  ],
 }
