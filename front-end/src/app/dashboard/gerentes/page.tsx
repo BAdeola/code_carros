@@ -2,11 +2,11 @@
 
 import { useState } from 'react'; 
 import Image from 'next/image';
-import { CarCard } from '../../components/shared/CarCard'; 
-import { VehicleModal } from '../../components/shared/VehicleModal'; 
-import { useGerenteData } from '../../hooks/useGerenteData'; 
-import { supabase } from '../../lib/supabase';
-import { ConfirmModal } from '../../components/shared/ConfirmModal';
+import { CarCard } from '../../../components/shared/CarCard'; 
+import { VehicleModal } from '../../../components/shared/VehicleModal'; 
+import { useGerenteData } from '../../../hooks/useGerenteData'; 
+import { supabase } from '../../../lib/supabase';
+import { ConfirmModal } from '../../../components/shared/ConfirmModal';
 
 import logoC from '../../../assets/logo_c.png'; 
 import { logoutAbsolutoAction } from '@/src/actions/usuarios';

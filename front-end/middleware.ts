@@ -34,38 +34,54 @@ export async function middleware(request: NextRequest) {
 
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (user) {
-        const { data: perfil } = await supabase
-        .from('perfis')
-        .select('cargo')
-        .eq('id', user.id)
-        .single()
+    // 🚨 NOVA REGRA DE SEGURANÇA INTELIGENTE E ANTI-LOOP
+  if (user) {
+    // 1. Buscamos o cargo na tabela perfis
+    const { data: perfil } = await supabase
+      .from('perfis')
+      .select('cargo')
+      .eq('id', user.id)
+      .single()
 
-        const cargo = perfil?.cargo
+    const cargo = perfil?.cargo // Pode ser 'admin', 'gerente', ou vir vazio (null)
 
-        if (request.nextUrl.pathname === '/login') {
-        if (cargo === 'admin') {
-            return NextResponse.redirect(new URL('/dashboard/admins', request.url))
-        } else {
-            return NextResponse.redirect(new URL('/dashboard/gerentes', request.url)) 
-        }
-        }
-
-        if (request.nextUrl.pathname.startsWith('/dashboard/admins') && cargo !== 'admin') {
-        return NextResponse.redirect(new URL('/dashboard/gerentes', request.url))
-        }
-
-        if (request.nextUrl.pathname.startsWith('/dashboard/gerentes') && cargo !== 'gerente') {
+    // 2. Se tentar aceder ao /login já estando logado
+    if (request.nextUrl.pathname.startsWith('/login')) {
+      if (cargo === 'admin') {
         return NextResponse.redirect(new URL('/dashboard/admins', request.url))
-        }
-
-    } else {
-        if (request.nextUrl.pathname.startsWith('/dashboard')) {
-        return NextResponse.redirect(new URL('/login', request.url))
-        }
+      } else if (cargo === 'gerente') {
+        return NextResponse.redirect(new URL('/dashboard/gerentes', request.url))
+      }
+      // 🔹 ANTI-LOOP: Se não tiver cargo, NÃO fazemos redirect! 
+      // Deixamos a pessoa ficar na página de login.
     }
 
-    return response
+    // 3. Proteção Cruzada do Painel Admin
+    if (request.nextUrl.pathname.startsWith('/dashboard/admins')) {
+      if (cargo === 'gerente') {
+        return NextResponse.redirect(new URL('/dashboard/gerentes', request.url))
+      } else if (cargo !== 'admin') {
+        // Se não for admin nem gerente (conta defeituosa), expulsa para o login
+        return NextResponse.redirect(new URL('/login', request.url))
+      }
+    }
+
+    // 4. Proteção Cruzada do Painel Gerente
+    if (request.nextUrl.pathname.startsWith('/dashboard/gerentes')) {
+      if (cargo === 'admin') {
+        return NextResponse.redirect(new URL('/dashboard/admins', request.url))
+      } else if (cargo !== 'gerente') {
+        return NextResponse.redirect(new URL('/login', request.url))
+      }
+    }
+
+  } else {
+    if (request.nextUrl.pathname.startsWith('/dashboard')) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+  }
+
+  return response
 }
 
 export const config = {
