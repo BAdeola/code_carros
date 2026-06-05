@@ -1,11 +1,9 @@
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabase'; // 🔹 Certifique-se que o lib/supabase.ts já usa createBrowserClient
 
 export function useLogin() {
   const [loading, setLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null); // 🔹 Novo estado de erro
-  const router = useRouter();
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const login = async (email: string, senha: string) => {
     setLoading(true);
@@ -16,13 +14,17 @@ export function useLogin() {
       return;
     }
 
-    setErrorMsg(null); // Limpa o erro anterior ao tentar logar de novo
+    setErrorMsg(null);
+
+    // 🔹 HIGIENE DE DADOS: Remove espaços extras do celular e deixa minúsculo
+    const emailLimpo = email.trim().toLowerCase();
+    const senhaLimpa = senha.trim();
 
     try {
       // 1. Autenticação
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password: senha,
+        email: emailLimpo,
+        password: senhaLimpa,
       });
 
       if (authError) throw authError;
@@ -39,15 +41,15 @@ export function useLogin() {
       // 3. Roteamento
       const cargo = perfilData.cargo;
 
+      // 🚨 MUDANÇA DE OURO: window.location.href força o envio dos Cookies para o Middleware
       if (cargo === 'super_admin' || cargo === 'admin') {
-        router.push('/dashboard/admins'); 
+        window.location.href = '/dashboard/admins'; 
       } else {
-        router.push('/dashboard'); 
+        window.location.href = '/dashboard/gerentes'; // 🔹 Coloque aqui a rota exata da tela do gerente
       }
 
     } catch (error: any) {
       console.error('Erro de Login:', error);
-      // 🔹 Se as credenciais não baterem, define a frase que você pediu
       if (error.message === 'Invalid login credentials') {
         setErrorMsg('E-mail ou senha errado. Verifique e tente novamente.');
       } else {
@@ -58,6 +60,5 @@ export function useLogin() {
     }
   };
 
-  // Devolvemos o errorMsg para a tela poder usar
   return { login, loading, errorMsg };
 }
