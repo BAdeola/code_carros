@@ -120,7 +120,7 @@ export default function DashboardGerente() {
   return (
     <main className="min-h-screen bg-[#F3F3F2] flex">
       {/* Sidebar Original */}
-      <AdminSidebar activeView={activeView} setActiveView={setActiveView} />
+      <AdminSidebar activeView={activeView} setActiveView={setActiveView} onLogout={handleLogout} />
 
       <section className="flex-1 overflow-y-auto h-screen relative">
         

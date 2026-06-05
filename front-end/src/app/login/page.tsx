@@ -11,8 +11,6 @@ import carroFundo from '../../../assets/login.png';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
-  
-  // 🔹 Puxamos o errorMsg de dentro do nosso Hook
   const { login, loading, errorMsg } = useLogin(); 
 
   const handleLogin = (e: React.FormEvent) => {
@@ -32,8 +30,32 @@ export default function LoginPage() {
         <div className="bg-white h-full overflow-y-auto w-full md:max-w-lg p-8 sm:p-12 md:p-16 flex flex-col justify-between items-center rounded-none md:rounded-r-[40px] md:shadow-2xl">
           
           <div className="w-full flex flex-col items-center mt-1 md:mt-0">
-            <div className="mb-10 w-full flex justify-start md:justify-left">
+
+            {/* HEADER: Logo + Seta de Voltar */}
+            <div className="mb-10 w-full flex justify-between items-center">
               <Image src={logoC} alt="Logo C" width={90} height={40} className="opacity-80 w-auto h-auto" />
+              
+              {/* 👈 SETA DE VOLTAR */}
+              <Link 
+                href="/" 
+                className="flex items-center gap-2 text-gray-400 hover:text-black transition-colors group"
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="18" height="18" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2.5" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  className="group-hover:-translate-x-1 transition-transform"
+                >
+                  <path d="M19 12H5" />
+                  <path d="M12 19l-7-7 7-7" />
+                </svg>
+                <span className="font-exa text-[10px] uppercase tracking-[0.2em] font-bold">Voltar</span>
+              </Link>
             </div>
 
             <div className="mb-12 w-full text-left">
@@ -59,14 +81,12 @@ export default function LoginPage() {
                 />
               </div>
 
-              {/* 🚨 MENSAGEM VERMELHA DE ERRO DINÂMICA */}
               {errorMsg && (
                 <div className="text-red-500 font-exa text-xs uppercase tracking-wider font-semibold bg-red-50 p-3 rounded-xl border border-red-100 text-left w-full animate-fade-in mt-4">
                   ⚠️ {errorMsg}
                 </div>
               )}
 
-              {/* Reduzi a margem superior de mt-10 para mt-6 para compensar o espaço caso o erro apareça */}
               <button type="submit" disabled={loading} className="mt-6 mb-10 w-full bg-blue-600 text-white font-exa font-bold text-lg py-4 rounded-xl shadow-lg hover:bg-blue-700 hover:scale-105 transition-all disabled:opacity-70 disabled:hover:scale-100 cursor-pointer disabled:cursor-not-allowed">
                 {loading ? 'ENTRANDO...' : 'LOGIN'}
               </button>

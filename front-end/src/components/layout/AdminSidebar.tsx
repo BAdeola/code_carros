@@ -1,15 +1,13 @@
 import Image from 'next/image';
-import Link from 'next/link';
 import logoC from '../../../assets/logo_c.png';
 
-// Tipagem das Props: O Sidebar precisa saber qual aba está ativa 
-// e precisa da função para mudar de aba quando o usuário clicar
 interface AdminSidebarProps {
   activeView: 'automoveis' | 'concessionarias' | 'usuarios';
   setActiveView: (view: 'automoveis' | 'concessionarias' | 'usuarios') => void;
+  onLogout: () => void; // 👈 nova prop
 }
 
-export function AdminSidebar({ activeView, setActiveView }: AdminSidebarProps) {
+export function AdminSidebar({ activeView, setActiveView, onLogout }: AdminSidebarProps) {
   return (
     <aside className="w-72 bg-white border-r border-gray-200 flex-col hidden md:flex sticky top-0 h-screen">
       
@@ -43,8 +41,9 @@ export function AdminSidebar({ activeView, setActiveView }: AdminSidebarProps) {
         
         <button
           onClick={() => setActiveView('usuarios')}
-          className={`w-full flex items-center gap-4 px-6 py-4 font-exa text-xs font-bold uppercase tracking-widest transition-all rounded-xl
-            ${activeView === 'usuarios' ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50'}`}
+          className={`w-full flex items-center gap-4 px-6 py-4 font-exa text-xs font-bold uppercase tracking-widest transition-all rounded-xl ${
+            activeView === 'usuarios' ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50'
+          }`}
         >
           Usuários
         </button>
@@ -54,7 +53,13 @@ export function AdminSidebar({ activeView, setActiveView }: AdminSidebarProps) {
       <div className="p-6 border-t border-gray-100">
         <div className="flex justify-between items-center">
           <span className="font-exa font-bold text-xs text-gray-800">Administrador Geral</span>
-          <Link href="/" className="font-exa font-bold text-[12px] text-red-500 hover:underline uppercase">Sair</Link>
+          {/* 👇 Era Link href="/", agora chama o modal de confirmação */}
+          <button
+            onClick={onLogout}
+            className="font-exa font-bold text-[12px] text-red-500 hover:underline uppercase cursor-pointer bg-transparent border-none"
+          >
+            Sair
+          </button>
         </div>
       </div>
     </aside>
