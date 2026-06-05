@@ -2,12 +2,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
 export async function middleware(request: NextRequest) {
-  // 1. Cria a resposta inicial que pode ser modificada
-  let supabaseResponse = NextResponse.next({
-    request,
-  })
+  let supabaseResponse = NextResponse.next({ request })
 
-  // 2. Inicializa o Supabase com a nova estrutura recomendada
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -17,10 +13,10 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          )
+          supabaseResponse = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options)
           )
@@ -29,12 +25,9 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // 3. Verifica ativamente o usuário e atualiza a sessão (IMPORTANTÍSSIMO)
   const { data: { user } } = await supabase.auth.getUser()
 
-  // 4. Lógica de Redirecionamento Baseada em Cargos (Role-Based)
   if (user) {
-    // Busca o cargo do usuário
     const { data: perfil } = await supabase
       .from('perfis')
       .select('cargo')
@@ -42,28 +35,32 @@ export async function middleware(request: NextRequest) {
       .single()
 
     const cargo = perfil?.cargo
+    const isAdmin = cargo === 'admin' || cargo === 'super_admin'
+    const isGerente = cargo === 'gerente'
 
-    // Se estiver na tela de login, manda pro dashboard certo
+    // Usuário logado tentando acessar /login → manda pro dashboard certo
     if (request.nextUrl.pathname.startsWith('/login')) {
-      if (cargo === 'admin') {
+      if (isAdmin) {
         return NextResponse.redirect(new URL('/dashboard/admins', request.url))
-      } else if (cargo === 'gerente') {
+      } else if (isGerente) {
         return NextResponse.redirect(new URL('/dashboard/gerentes', request.url))
       }
     }
 
-    // Proteção Cruzada - Admin
-    if (request.nextUrl.pathname.startsWith('/dashboard/admins') && cargo !== 'admin') {
-      return NextResponse.redirect(new URL(cargo === 'gerente' ? '/dashboard/gerentes' : '/login', request.url))
+    // Proteção cruzada
+    if (request.nextUrl.pathname.startsWith('/dashboard/admins') && !isAdmin) {
+      return NextResponse.redirect(
+        new URL(isGerente ? '/dashboard/gerentes' : '/login', request.url)
+      )
     }
 
-    // Proteção Cruzada - Gerente
-    if (request.nextUrl.pathname.startsWith('/dashboard/gerentes') && cargo !== 'gerente') {
-      return NextResponse.redirect(new URL(cargo === 'admin' ? '/dashboard/admins' : '/login', request.url))
+    if (request.nextUrl.pathname.startsWith('/dashboard/gerentes') && !isGerente) {
+      return NextResponse.redirect(
+        new URL(isAdmin ? '/dashboard/admins' : '/login', request.url)
+      )
     }
 
   } else {
-    // Se não tem usuário e tenta entrar numa rota protegida, chuta pro login
     if (request.nextUrl.pathname.startsWith('/dashboard')) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
@@ -74,12 +71,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
