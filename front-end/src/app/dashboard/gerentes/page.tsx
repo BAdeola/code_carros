@@ -8,7 +8,7 @@ import { useGerenteData } from '../../../hooks/useGerenteData';
 import { supabase } from '../../../lib/supabase';
 import { ConfirmModal } from '../../../components/shared/ConfirmModal';
 
-import logoC from '../../../assets/logo_c.png'; 
+import logoC from '../../../../assets/logo_c.png'; 
 import { logoutAbsolutoAction } from '../../../actions/usuarios';
 
 export default function DashboardCliente() {
