@@ -39,12 +39,31 @@ export function useAdminData() {
     }
   };
 
+  useEffect(() => {
+    // 1. Verificação Estrita ao carregar a página (inclusive ao usar o botão 'Voltar')
+    const verificarSessao = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        window.location.replace('/login'); // 🔹 Expulsa imediatamente
+      }
+    };
+    
+    verificarSessao();
+
+    // 2. Escuta ativa: Se a sessão for destruída enquanto a pessoa está na tela
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        window.location.replace('/login'); // 🔹 Expulsa imediatamente
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   // Executa automaticamente quando a página carrega
   useEffect(() => {
     fetchData();
   }, []);
-
-  // Retornamos os dados e a função fetchData para podermos atualizar a tela 
-  // automaticamente depois que o admin salvar ou apagar algo!
+  
   return { concessionarias, carros, usuarios, loading, refetch: fetchData };
 }

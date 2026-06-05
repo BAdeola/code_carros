@@ -32,6 +32,27 @@ export function useGerenteData() {
     }
   };
 
+  useEffect(() => {
+    // 1. Verificação Estrita ao carregar a página (inclusive ao usar o botão 'Voltar')
+    const verificarSessao = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        window.location.replace('/login'); // 🔹 Expulsa imediatamente
+      }
+    };
+    
+    verificarSessao();
+
+    // 2. Escuta ativa: Se a sessão for destruída enquanto a pessoa está na tela
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || !session) {
+        window.location.replace('/login'); // 🔹 Expulsa imediatamente
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   useEffect(() => { fetchDados(); }, []);
 
   return { concessionaria, carros, gerente, loading, refetch: fetchDados }; 
