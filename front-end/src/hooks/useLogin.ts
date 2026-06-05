@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '../lib/supabase'; // 🔹 Certifique-se que o lib/supabase.ts já usa createBrowserClient
+import { loginAbsolutoAction } from '../actions/usuarios'; 
 
 export function useLogin() {
   const [loading, setLoading] = useState(false);
@@ -16,47 +16,28 @@ export function useLogin() {
 
     setErrorMsg(null);
 
-    // 🔹 HIGIENE DE DADOS: Remove espaços extras do celular e deixa minúsculo
     const emailLimpo = email.trim().toLowerCase();
     const senhaLimpa = senha.trim();
 
-    try {
-      // 1. Autenticação
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: emailLimpo,
-        password: senhaLimpa,
-      });
+    // 🚨 Chama a Server Action! O Servidor faz o login e já crava o Cookie.
+    const resposta = await loginAbsolutoAction(emailLimpo, senhaLimpa);
 
-      if (authError) throw authError;
-
-      // 2. Autorização
-      const { data: perfilData, error: perfilError } = await supabase
-        .from('perfis')
-        .select('cargo')
-        .eq('id', authData.user.id)
-        .single();
-
-      if (perfilError) throw perfilError;
-
-      // 3. Roteamento
-      const cargo = perfilData.cargo;
-
-      // 🚨 MUDANÇA DE OURO: window.location.href força o envio dos Cookies para o Middleware
-      if (cargo === 'super_admin' || cargo === 'admin') {
-        window.location.href = '/dashboard/admins'; 
-      } else {
-        window.location.href = '/dashboard/gerentes'; // 🔹 Coloque aqui a rota exata da tela do gerente
-      }
-
-    } catch (error: any) {
-      console.error('Erro de Login:', error);
-      if (error.message === 'Invalid login credentials') {
+    if (!resposta.success) {
+      if (resposta.message === 'Invalid login credentials') {
         setErrorMsg('E-mail ou senha errado. Verifique e tente novamente.');
       } else {
-        setErrorMsg(`Erro ao entrar: ${error.message}`);
+        setErrorMsg(`Erro ao entrar: ${resposta.message}`);
       }
-    } finally {
       setLoading(false);
+      return;
+    }
+
+    // Se chegou aqui, o Cookie JÁ ESTÁ GRAVADO e validado! 
+    // Basta olhar o cargo e mandar para a tela certa.
+    if (resposta.cargo === 'super_admin' || resposta.cargo === 'admin') {
+      window.location.href = '/dashboard/admins'; 
+    } else {
+      window.location.href = '/dashboard/gerentes'; // 🔹 Ajuste se a rota do seu gerente for diferente
     }
   };
 
