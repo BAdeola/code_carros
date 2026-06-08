@@ -259,13 +259,23 @@ export function VehicleModal({ isOpen, onClose, onSave, initialData, dealerships
           <div className="flex flex-col gap-1">
             <label className="font-exa text-[10px] uppercase tracking-widest font-bold text-gray-500">Carroceria</label>
             <select required className="p-3 md:p-4 bg-gray-50 border border-gray-200 rounded-xl font-exa text-sm outline-none focus:ring-2 focus:ring-blue-600" value={formData.carroceria} onChange={(e) => setFormData({...formData, carroceria: e.target.value})}>
-              <option value="">Selecione</option><option value="sedan">Sedan</option><option value="suv">SUV</option><option value="hatch">Hatch</option><option value="picape">Picape</option>
+              <option value="">Selecione</option>
+              <option value="sedan">Sedan</option>
+              <option value="suv">SUV</option>
+              <option value="hatch">Hatch</option>
+              <option value="picape">Picape</option>
+              <option value="moto">Moto</option>
             </select>
           </div>
           <div className="flex flex-col gap-1">
             <label className="font-exa text-[10px] uppercase tracking-widest font-bold text-gray-500">Combustível</label>
             <select required className="p-3 md:p-4 bg-gray-50 border border-gray-200 rounded-xl font-exa text-sm outline-none focus:ring-2 focus:ring-blue-600" value={formData.combustivel} onChange={(e) => setFormData({...formData, combustivel: e.target.value})}>
-              <option value="">Selecione</option><option value="flex">Flex</option><option value="gasolina">Gasolina</option><option value="diesel">Diesel</option><option value="eletrico">Elétrico</option><option value="hibrido">Híbrido</option>
+              <option value="">Selecione</option>
+              <option value="flex">Flex</option>
+              <option value="gasolina">Gasolina</option>
+              <option value="diesel">Diesel</option>
+              <option value="eletrico">Elétrico</option>
+              <option value="hibrido">Híbrido</option>
             </select>
           </div>
 

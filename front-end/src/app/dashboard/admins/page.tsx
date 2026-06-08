@@ -74,7 +74,6 @@ export default function DashboardGerente() {
     });
   };
 
-  // 🔹 NOVA FUNÇÃO: Deletar Carro com o ConfirmModal
   const handleDeleteCar = (id: string, modelo: string) => {
     setConfirmModal({
       isOpen: true,
@@ -85,8 +84,8 @@ export default function DashboardGerente() {
         try {
           const { error } = await supabase.from('automoveis').delete().eq('id', id);
           if (error) throw error;
-          refetch(); // Atualiza a tela
-          setConfirmModal({ ...confirmModal, isOpen: false }); // Fecha o modal
+          refetch();
+          setConfirmModal({ ...confirmModal, isOpen: false });
         } catch (error: any) {
           alert('Erro ao apagar veículo: ' + error.message);
         }
@@ -119,7 +118,6 @@ export default function DashboardGerente() {
 
   return (
     <main className="min-h-screen bg-[#F3F3F2] flex">
-      {/* Sidebar Original */}
       <AdminSidebar activeView={activeView} setActiveView={setActiveView} onLogout={handleLogout} />
 
       <section className="flex-1 overflow-y-auto h-screen relative">
@@ -160,7 +158,7 @@ export default function DashboardGerente() {
           </div>
         </div>
 
-        {/* CONTEÚDO: AUTOMÓVEIS */}
+        {/* 🚗 CONTEÚDO: AUTOMÓVEIS */}
         {activeView === 'automoveis' && (
           <div className="p-4 sm:p-8 md:p-12 max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
@@ -201,7 +199,6 @@ export default function DashboardGerente() {
                       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
                         {carrosDestaConcessionaria.map((carro) => (
                           <CarCard key={carro.id} car={carro}>
-                            {/* 🔹 ADICIONADO O BOTÃO DE REMOVER AQUI */}
                             <div className="flex gap-2 mt-4">
                                 <button onClick={() => openEditCarModal(carro)} className="flex-1 border border-blue-200 text-blue-600 font-exa text-[10px] font-bold uppercase py-2 rounded-lg hover:bg-blue-50 transition-colors cursor-pointer">
                                   Editar (Admin)
@@ -242,7 +239,8 @@ export default function DashboardGerente() {
                 return (
                   <div key={conc.id} className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:shadow-md transition-all">
                     
-                    <div className="flex items-center gap-4 md:gap-6 w-full md:w-auto">
+                    {/* 🚨 CORREÇÃO DE LAYOUT: flex-1 min-w-0 trava o crescimento da área de texto */}
+                    <div className="flex items-center gap-4 md:gap-6 flex-1 min-w-0 w-full">
                       {conc.logo_url ? (
                          <div className="shrink-0 w-14 h-14 md:w-16 md:h-16 rounded-full overflow-hidden relative border border-gray-200">
                            <img src={conc.logo_url} alt={conc.nome} className="object-cover w-full h-full" />
@@ -253,15 +251,21 @@ export default function DashboardGerente() {
                         </div>
                       )}
                       
-                      <div className="min-w-0 flex-1">
+                      {/* O pr-4 dá uma distância de respiro antes dos botões */}
+                      <div className="min-w-0 flex-1 pr-4">
                         <h3 className="font-zetta font-black uppercase text-base md:text-lg text-black truncate">{conc.nome}</h3>
-                        <p className="font-exa text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mt-1 truncate">
+                        {/* 🚨 EFEITO MÁSCARA: O truncate coloca o "..." e a maskImage faz o "fade out" maravilhoso */}
+                        <p 
+                          className="font-exa text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mt-1 truncate"
+                          style={{ WebkitMaskImage: 'linear-gradient(to right, black 80%, transparent 100%)' }}
+                        >
                           {conc.endereco || 'Endereço não definido'}
                         </p>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4 md:gap-8 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 border-gray-100 pt-4 md:pt-0">
+                    {/* 🚨 CORREÇÃO DOS BOTÕES: O shrink-0 indica que esta área é de FERRO, nunca vai encolher ou ser empurrada */}
+                    <div className="flex items-center gap-4 md:gap-8 shrink-0 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 border-gray-100 pt-4 md:pt-0">
                       <div className="text-center shrink-0">
                         <span className="block font-zetta font-black text-xl md:text-2xl text-blue-600">{totalCarros}</span>
                         <span className="font-exa text-[8px] md:text-[9px] uppercase tracking-widest text-gray-400">Veículos</span>
@@ -305,20 +309,26 @@ export default function DashboardGerente() {
                 return (
                   <div key={user.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition-all">
                     
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-zetta font-black">
+                    {/* 🚨 Mesma correção aplicada à lista de usuários para evitar e-mails enormes quebrando a tela */}
+                    <div className="flex items-center gap-4 flex-1 min-w-0 w-full">
+                      <div className="shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-zetta font-black">
                         {user.nome.charAt(0)}
                       </div>
-                      <div>
-                        <h3 className="font-zetta font-black uppercase text-base text-black">{user.nome}</h3>
-                        <p className="font-exa text-[10px] text-gray-500 uppercase tracking-widest">{user.email}</p>
+                      <div className="min-w-0 flex-1 pr-4">
+                        <h3 className="font-zetta font-black uppercase text-base text-black truncate">{user.nome}</h3>
+                        <p 
+                          className="font-exa text-[10px] text-gray-500 uppercase tracking-widest truncate"
+                          style={{ WebkitMaskImage: 'linear-gradient(to right, black 80%, transparent 100%)' }}
+                        >
+                          {user.email}
+                        </p>
                       </div>
                     </div>
 
-                    <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-8 w-full md:w-auto">
-                      <div className="bg-gray-50 px-4 py-2 rounded-lg border border-gray-200">
+                    <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-8 shrink-0 w-full md:w-auto">
+                      <div className="bg-gray-50 px-4 py-2 rounded-lg border border-gray-200 w-full md:w-auto">
                         <span className="font-exa text-[9px] text-gray-400 uppercase block mb-1">Vinculado à loja</span>
-                        <span className="font-exa text-xs font-bold text-gray-800">{lojaDoUsuario?.nome || 'Nenhuma loja'}</span>
+                        <span className="font-exa text-xs font-bold text-gray-800 truncate block max-w-37.5">{lojaDoUsuario?.nome || 'Nenhuma loja'}</span>
                       </div>
                       
                       <div className="flex gap-2 w-full md:w-auto">
@@ -341,7 +351,7 @@ export default function DashboardGerente() {
           </div>
         )}
 
-        {/* MODAIS INSERIDOS NO FINAL DA PÁGINA */}
+        {/* MODAIS */}
         <UserModal isOpen={isUserModalOpen} onClose={() => setIsUserModalOpen(false)} onSuccess={refetch} dealerships={concessionarias} initialData={selectedUser} />
         <VehicleModal isOpen={isCarModalOpen} onClose={() => setIsCarModalOpen(false)} onSave={handleSaveCar} initialData={selectedCar} dealerships={concessionarias} />
         <ConcessionariaModal isOpen={isConcModalOpen} onClose={() => setIsConcModalOpen(false)} onSuccess={refetch} initialData={selectedConc} />
