@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+// 🔹 ADICIONADO useMemo e useEffect aqui!
+import { useState, useMemo, useEffect } from 'react';
 import { supabase } from '../../../lib/supabase';
 import { CarCard } from '../../../components/shared/CarCard'; 
 import { AdminSidebar } from '../../../components/layout/AdminSidebar'; 
@@ -16,6 +17,9 @@ export default function DashboardGerente() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
 
   const [filtroConcessionaria, setFiltroConcessionaria] = useState<string>('0');
+
+  // 🚨 NOVA VARIÁVEL DE ESTADO PARA PESQUISA
+  const [searchTerm, setSearchTerm] = useState('');
 
   const [isCarModalOpen, setIsCarModalOpen] = useState(false);
   const [selectedCar, setSelectedCar] = useState<any>(null);
@@ -108,6 +112,26 @@ export default function DashboardGerente() {
     });
   };
 
+  // 🚨 LÓGICA DE FILTRAGEM INTELIGENTE (Tempo Real e Desempenho Sênior)
+  // O useMemo é crucial aqui. Ele impede que o navegador refaça a busca se você estiver
+  // apenas digitando, sem que a lista de carros do banco mude.
+  const carrosFiltrados = useMemo(() => {
+    if (!carros || carros.length === 0) return [];
+    
+    return carros.filter((carro) => {
+      // Cria o termo de pesquisa em minúsculo para a comparação ser justa
+      const term = searchTerm.trim().toLowerCase();
+      
+      // Busca pelo Modelo (ex: Golf)
+      const modeloMatch = carro.modelo && carro.modelo.toLowerCase().includes(term);
+      // Busca pelo Fabricante (ex: VW)
+      const fabricanteMatch = carro.fabricante && carro.fabricante.toLowerCase().includes(term);
+      
+      // Retorna true se houver correspondência no modelo OU no fabricante
+      return modeloMatch || fabricanteMatch;
+    });
+  }, [carros, searchTerm]); // Só re-calcula se mudar a lista do banco ou o texto digitado
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#F3F3F2] flex items-center justify-center font-exa text-blue-600 font-bold uppercase tracking-widest p-10">
@@ -161,20 +185,44 @@ export default function DashboardGerente() {
         {/* 🚗 CONTEÚDO: AUTOMÓVEIS */}
         {activeView === 'automoveis' && (
           <div className="p-4 sm:p-8 md:p-12 max-w-7xl mx-auto">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-              <div>
-                <h1 className="font-exa text-2xl md:text-3xl font-black uppercase text-black">Gestão de Galeria</h1>
-                <p className="font-exa text-xs md:text-sm text-gray-500 mt-2 uppercase tracking-[0.2em]">Todos os veículos do sistema</p>
+            {/* 🚨 ADICIONADO O CONTÊINER DE FLEXBOX AJUSTADO PARA RESPONSIVIDADE */}
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12 border-b border-gray-100 pb-8">
+              
+              {/* Título e Barra de Pesquisa */}
+              <div className="w-full md:w-auto space-y-4">
+                <div>
+                  <h1 className="font-exa text-2xl md:text-3xl font-black uppercase text-black leading-tight">Gestão de Galeria</h1>
+                  <p className="font-exa text-xs md:text-sm text-gray-500 mt-2 uppercase tracking-[0.2em]">Todos os veículos do sistema</p>
+                </div>
+                
+                {/* 🚨 NOVA BARRA DE PESQUISA (RESPONSIVA) */}
+                {/* md:w-80 trava o tamanho no PC, w-full ocupa tudo no celular */}
+                <div className="relative w-full md:w-80">
+                  {/* Ícone de Lupa Nível Premium */}
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <input 
+                    type="search" 
+                    placeholder="Buscar carro por modelo ou fabricante..." 
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)} // 🔹 Liga o input ao estado
+                    className="w-full bg-white border border-gray-200 p-4 pl-12 rounded-xl font-exa text-sm outline-none focus:ring-2 focus:ring-blue-600 transition-all shadow-inner"
+                  />
+                </div>
               </div>
 
-              <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto">
+              {/* Botões de Ação */}
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto shrink-0">
                 <button onClick={openCreateCarModal} className="w-full md:w-auto bg-blue-600 text-white font-exa font-bold text-xs px-6 py-4 rounded-xl shadow-lg hover:bg-blue-700 transition-all">
                   + CADASTRAR AUTOMÓVEL
                 </button>
 
                 <div className="flex items-center gap-3 w-full md:w-auto">
                   <span className="font-exa text-[10px] font-bold uppercase tracking-widest text-gray-400 hidden md:inline">Filtrar:</span>
-                  <select className="w-full md:w-56 p-4 bg-white border border-gray-200 rounded-xl font-exa text-sm outline-none" value={filtroConcessionaria} onChange={(e) => setFiltroConcessionaria(e.target.value)}>
+                  <select className="w-full md:w-56 p-4 bg-white border border-gray-200 rounded-xl font-exa text-sm outline-none focus:ring-2 focus:ring-blue-600" value={filtroConcessionaria} onChange={(e) => setFiltroConcessionaria(e.target.value)}>
                     <option value="0">Todas as Lojas</option>
                     {concessionarias.map(c => <option key={c.id} value={c.id}>{c.nome}</option>)}
                   </select>
@@ -184,7 +232,8 @@ export default function DashboardGerente() {
 
             <div className="space-y-16">
               {concessionarias.filter(conc => filtroConcessionaria === '0' || conc.id === filtroConcessionaria).map((conc) => {
-                  const carrosDestaConcessionaria = carros.filter(c => c.concessionaria_id === conc.id);
+                  // 🚨 MUDANÇA: Agora filtramos dentro da lista JÁ FILTRADA pela pesquisa
+                  const carrosDestaConcessionaria = carrosFiltrados.filter(c => c.concessionaria_id === conc.id);
                   if (filtroConcessionaria === '0' && carrosDestaConcessionaria.length === 0) return null; 
 
                   return (
@@ -214,6 +263,14 @@ export default function DashboardGerente() {
                   );
               })}
             </div>
+
+            {/* 🚨 ADICIONADO FEEDBACK DE PESQUISA VAZIA (SÊNIOR) */}
+            {activeView === 'automoveis' && carrosFiltrados.length === 0 && !loading && (
+              <div className="text-center py-20 bg-white rounded-2xl border border-gray-100 mt-16 shadow-inner">
+                <p className="font-exa text-lg text-gray-400">Nenhum veículo encontrado com este nome.</p>
+                <p className="font-exa text-sm text-gray-400 mt-2">Tente buscar por modelo ou fabricante.</p>
+              </div>
+            )}
           </div>
         )}
 
@@ -239,7 +296,6 @@ export default function DashboardGerente() {
                 return (
                   <div key={conc.id} className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 hover:shadow-md transition-all">
                     
-                    {/* 🚨 CORREÇÃO DE LAYOUT: flex-1 min-w-0 trava o crescimento da área de texto */}
                     <div className="flex items-center gap-4 md:gap-6 flex-1 min-w-0 w-full">
                       {conc.logo_url ? (
                          <div className="shrink-0 w-14 h-14 md:w-16 md:h-16 rounded-full overflow-hidden relative border border-gray-200">
@@ -251,10 +307,8 @@ export default function DashboardGerente() {
                         </div>
                       )}
                       
-                      {/* O pr-4 dá uma distância de respiro antes dos botões */}
                       <div className="min-w-0 flex-1 pr-4">
                         <h3 className="font-zetta font-black uppercase text-base md:text-lg text-black truncate">{conc.nome}</h3>
-                        {/* 🚨 EFEITO MÁSCARA: O truncate coloca o "..." e a maskImage faz o "fade out" maravilhoso */}
                         <p 
                           className="font-exa text-[10px] md:text-xs text-gray-500 uppercase tracking-widest mt-1 truncate"
                           style={{ WebkitMaskImage: 'linear-gradient(to right, black 80%, transparent 100%)' }}
@@ -264,7 +318,6 @@ export default function DashboardGerente() {
                       </div>
                     </div>
 
-                    {/* 🚨 CORREÇÃO DOS BOTÕES: O shrink-0 indica que esta área é de FERRO, nunca vai encolher ou ser empurrada */}
                     <div className="flex items-center gap-4 md:gap-8 shrink-0 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 border-gray-100 pt-4 md:pt-0">
                       <div className="text-center shrink-0">
                         <span className="block font-zetta font-black text-xl md:text-2xl text-blue-600">{totalCarros}</span>
@@ -309,7 +362,6 @@ export default function DashboardGerente() {
                 return (
                   <div key={user.id} className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:shadow-md transition-all">
                     
-                    {/* 🚨 Mesma correção aplicada à lista de usuários para evitar e-mails enormes quebrando a tela */}
                     <div className="flex items-center gap-4 flex-1 min-w-0 w-full">
                       <div className="shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-zetta font-black">
                         {user.nome.charAt(0)}

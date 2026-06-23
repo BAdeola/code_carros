@@ -15,8 +15,26 @@ const lexendZetta = Lexend_Zetta({
 });
 
 export const metadata: Metadata = {
-  title: "Code Carros",
-  description: "Soluções de marketing digital para concessionárias de carros, impulsionando vendas e presença online.",
+  title: {
+    template: '%s | Code Carros',
+    default: 'Code Carros | Plataforma de Negócios Automotivos', 
+  },
+  description: 'Gestão inteligente, catálogo exclusivo de veículos seminovos e conexão direta com as melhores concessionárias.',
+  openGraph: {
+    title: 'Code Carros | Plataforma de Negócios Automotivos',
+    description: 'Os melhores veículos seminovos do mercado em um só lugar.',
+    url: 'https://code-carros.vercel.app',
+    siteName: 'Code Carros',
+    images: [
+      {
+        url: 'https://code-carros.vercel.app/logo_c.png',
+        width: 800,
+        height: 600,
+      },
+    ],
+    locale: 'pt_BR',
+    type: 'website',
+  },
 };
 
 export default function RootLayout({
@@ -26,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="pt-br"
       className={`${lexendExa.variable} ${lexendZetta.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
