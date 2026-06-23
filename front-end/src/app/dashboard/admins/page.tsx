@@ -206,9 +206,9 @@ export default function DashboardGerente() {
                   </div>
                   <input 
                     type="search" 
-                    placeholder="Buscar carro por modelo ou fabricante..." 
+                    placeholder="Buscar por modelo ou fabricante..." 
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)} // 🔹 Liga o input ao estado
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full bg-white border border-gray-200 p-4 pl-12 rounded-xl font-exa text-sm outline-none focus:ring-2 focus:ring-blue-600 transition-all shadow-inner"
                   />
                 </div>

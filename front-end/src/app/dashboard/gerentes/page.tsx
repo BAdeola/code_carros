@@ -64,7 +64,6 @@ export default function DashboardCliente() {
   const openEditModal = (carro: any) => { setSelectedCar(carro); setIsModalOpen(true); };
   const openCreateModal = () => { setSelectedCar(null); setIsModalOpen(true); };
 
-  // 🚨 LÓGICA DE FILTRAGEM AUTOMÁTICA (Padrão Sênior)
   const carrosFiltrados = useMemo(() => {
     if (!carros || carros.length === 0) return [];
     
@@ -133,7 +132,7 @@ export default function DashboardCliente() {
                     </div>
                     <input 
                       type="search" 
-                      placeholder="Buscar no meu estoque..." 
+                      placeholder="Buscar por nome ou fabricante..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full bg-white border border-gray-200 p-4 pl-12 rounded-xl font-exa text-sm outline-none focus:ring-2 focus:ring-blue-600 transition-all text-left"
